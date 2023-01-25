@@ -15,9 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from subscriptions.models import Subscription
+from users.models import Company, PhoneNumber
+from django_q.tasks import Schedule
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('subscriptions/', include('subscriptions.urls'))
 ]
+
+Schedule.objects.create(name="check payments", func='subscriptions.tasks.check_payment', schedule_type=Schedule.MINUTES, minutes=1, repeats=2)
