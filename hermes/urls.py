@@ -25,4 +25,4 @@ urlpatterns = [
     path('subscriptions/', include('subscriptions.urls'))
 ]
 
-Schedule.objects.create(name="check payments", func='subscriptions.tasks.check_payment', schedule_type=Schedule.MINUTES, minutes=1, repeats=2)
+Schedule.objects.create(name="check payments", func='subscriptions.tasks.check_payment', schedule_type=Schedule.HOURLY, repeats=-1)

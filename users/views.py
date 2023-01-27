@@ -5,9 +5,7 @@ from subscriptions.models import Subscription
 from .serializers import CompanySerializer, NumberSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
 import jwt, secrets, datetime
 
 def company_list(request):
@@ -53,47 +51,6 @@ def generate_number():
     if(PhoneNumber.objects.filter(company_id = number).exists()):
         generate_number()
     return number
-
-class LoginView(APIView):
-    def post(self, request):
-        username = request.data['username']
-        password = request.data['password']
-        user = User.objects.filter(username=username).first()
-        
-        if user is None:
-            raise AuthenticationFailed("User not found.")
-        if not user.check_password(password):
-            raise AuthenticationFailed("Incorrect Password.")
-
-        payload = {
-            "id": user.id,
-            "exp": datetime.datetime.utcnow()+ datetime.timedelta(minutes=90),
-            "iat": datetime.datetime.utcnow()
-        }
-
-        token = jwt.encode(payload, 'secret', algorithm="HS256").decode("utf-8")
-        response = Response()
-        response.set_cookie(key="jwt", value=token, httponly=True)
-        response.data = {"jwt": token}
-
-        return response
-
-class UserView(APIView):
-    def get(self, request):
-        token = request.COOKIES.get("jwt")
-        
-        if not token:
-            raise AuthenticationFailed("Unauthenticated User")
-
-        try:
-            payload = jwt.decode(token, 'secret', algorithm=["HS256"])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed("Unauthenticated User")
-
-        user = User.objects.filter(id=payload['id']).first()
-        serializer = UserSerializer(user)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def numbers_list(request, company_id):
